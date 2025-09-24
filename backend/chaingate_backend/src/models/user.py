@@ -11,7 +11,7 @@ class User(db.Model):
     username = db.Column(db.String(255), unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(50), nullable=False, default='player')  # 'player' or 'admin'
+    role = db.Column(db.String(50), nullable=False, default='player')  # 'player'
     kyc_status = db.Column(db.String(50), nullable=False, default='pending')  # 'pending', 'verified', 'rejected', 'flagged'
     risk_level = db.Column(db.String(50), nullable=False, default='low')  # 'low', 'medium', 'high'
     is_active = db.Column(db.Boolean, nullable=False, default=True)
@@ -82,7 +82,7 @@ class Transaction(db.Model):
     fee = db.Column(db.Numeric(18, 8), default=0.0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    admin_notes = db.Column(db.Text)
+
 
     def to_dict(self):
         return {
@@ -98,8 +98,7 @@ class Transaction(db.Model):
             'confirmations': self.confirmations,
             'fee': float(self.fee),
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
-            'admin_notes': self.admin_notes
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
 
 class KYCDocument(db.Model):

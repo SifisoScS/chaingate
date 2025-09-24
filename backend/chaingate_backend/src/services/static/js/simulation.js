@@ -373,14 +373,13 @@ class BitcoinSimulation {
             'initiated': 'Initiated',
             'broadcasting': 'Broadcasting',
             'pending': 'Confirming',
-            'pending_admin': 'Pending Approval',
             'approved': 'Approved',
             'completed': 'Completed',
             'failed': 'Failed',
             'rejected': 'Rejected',
             'flagged': 'Flagged'
         };
-        
+
         return displayTexts[status] || status.charAt(0).toUpperCase() + status.slice(1);
     }
 
@@ -388,7 +387,6 @@ class BitcoinSimulation {
         const colors = {
             'completed': 'text-green-400',
             'pending': 'text-yellow-400',
-            'pending_admin': 'text-blue-400',
             'failed': 'text-red-400',
             'rejected': 'text-red-400',
             'flagged': 'text-purple-400',
@@ -396,7 +394,7 @@ class BitcoinSimulation {
             'broadcasting': 'text-indigo-400',
             'approved': 'text-green-400'
         };
-        
+
         return colors[status] || 'text-gray-400';
     }
 

@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChainGate | AI-Powered Crypto Compliance</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1e40af;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --darker: #020617;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: white;
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        /* Glassmorphism Effects */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .glass-dark {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(55, 65, 81, 0.3);
+        }
+        
+        /* Custom Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.8); }
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        .animate-pulseGlow {
+            animation: pulseGlow 2s infinite;
+        }
+        
+        .animate-slideInRight {
+            animation: slideInRight 0.5s ease-out;
+        }
+        
+        .gradient-shift {
+            background: linear-gradient(-45deg, #3b82f6, #8b5cf6, #10b981, #f59e0b);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        /* Custom Gradient Backgrounds */
+        .gradient-primary {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        }
+        
+        .gradient-secondary {
+            background: linear-gradient(135deg, #7c3aed 0%, var(--secondary) 100%);
+        }
+        
+        .gradient-success {
+            background: linear-gradient(135deg, #059669 0%, var(--success) 100%);
+        }
+        
+        .gradient-warning {
+            background: linear-gradient(135deg, #d97706 0%, var(--warning) 100%);
+        }
+        
+        .gradient-danger {
+            background: linear-gradient(135deg, #dc2626 0%, var(--danger) 100%);
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid var(--primary);
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        /* Hover Effects */
+        .hover-lift {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Navigation Buttons */
+        .nav-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .nav-btn:hover::before {
+            left: 100%;
+        }
+        
+        /* AI Assistant */
+        .ai-assistant {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        
+        .ai-bubble {
+            max-height: 0;
+            opacity: 0;
+            transition: max-height 0.5s ease, opacity 0.5s ease;
+            overflow: hidden;
+        }
+        
+        .ai-bubble.active {
+            max-height: 300px;
+            opacity: 1;
+        }
+        
+        /* Status Indicators */
+        .status-indicator {
+            position: relative;
+            padding-left: 1.5rem;
+        }
+        
+        .status-indicator::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            background-color: var(--success);
+        }
+        
+        .status-indicator.warning::before {
+            background-color: var(--warning);
+        }
+        
+        .status-indicator.danger::before {
+            background-color: var(--danger);
+        }
+        
+        /* Progress Bars */
+        .progress-bar {
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Custom Tabs */
+        .tab-active {
+            background: rgba(59, 130, 246, 0.2);
+            border-left: 3px solid var(--primary);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="relative mb-6">
+                <div class="w-16 h-16 gradient-primary rounded-full flex items-center justify-center mx-auto">
+                    <i class="fas fa-link text-white text-2xl"></i>
+                </div>
+                <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-white animate-spin"></div>
+            </div>
+            <h2 class="text-2xl font-bold mb-2">Loading ChainGate</h2>
+            <p class="text-slate-400">Initializing AI-powered compliance system...</p>
+        </div>
+    </div>
+    
+    <!-- Main Application -->
+    <div id="app" class="hidden min-h-screen flex flex-col lg:flex-row">
+        <!-- Sidebar Navigation -->
+        <div class="glass-dark w-full lg:w-64 min-h-screen p-4 flex flex-col">
+            <div class="flex items-center space-x-3 mb-8 pt-4">
+                <div class="gradient-primary p-2 rounded-lg">
+                    <i class="fas fa-link text-white text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold">ChainGate</h1>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <nav class="flex-1">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="nav-btn flex items-center space-x-3 p-3 rounded-lg gradient-primary text-white tab-active">
+                            <i class="fas fa-tachometer-alt w-5 text-center"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-exchange-alt w-5 text-center"></i>
+                            <span>Transactions</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-wallet w-5 text-center"></i>
+                            <span>Wallets</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-shield-alt w-5 text-center"></i>
+                            <span>Compliance</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-chart-bar w-5 text-center"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-cog w-5 text-center"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- User Info -->
+            <div class="pt-4 border-t border-slate-700">
+                <div class="flex items-center space-x-3 p-3 rounded-lg bg-slate-800/30">
+                    <div class="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium truncate" id="sidebarUserName">Alice Johnson</p>
+                        <p class="text-xs text-slate-400 truncate" id="sidebarUserRole">Verified Player</p>
+                    </div>
+                    <div class="status-indicator"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col">
+            <!-- Top Navigation Bar -->
+            <header class="glass-dark p-4 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button id="sidebarToggle" class="p-2 rounded-lg hover:bg-slate-800/50 lg:hidden">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h2 class="text-xl font-semibold">Dashboard Overview</h2>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Quick Actions -->
+                    <div class="hidden md:flex space-x-2">
+                        <button class="gradient-primary px-4 py-2 rounded-lg text-sm hover:opacity-90 transition-opacity">
+                            <i class="fas fa-plus mr-1"></i> Deposit
+                        </button>
+                        <button class="glass px-4 py-2 rounded-lg text-sm hover:bg-white/20 transition-colors">
+                            <i class="fas fa-exchange-alt mr-1"></i> Transfer
+                        </button>
+                    </div>
+                    
+                    <!-- Notifications -->
+                    <button class="relative p-2 rounded-lg hover:bg-slate-800/50">
+                        <i class="fas fa-bell"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    
+                    <!-- User Menu -->
+                    <div class="flex items-center space-x-3">
+                        <div class="text-right hidden md:block">
+                            <p class="font-medium" id="topbarUserName">Alice Johnson</p>
+                            <p class="text-xs text-slate-400" id="topbarUserRole">Verified Player</p>
+                        </div>
+                        <div class="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Main Content -->
+            <main class="flex-1 p-6 overflow-auto">
+                <!-- Welcome Section -->
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold mb-2">Welcome back, Alice!</h1>
+                    <p class="text-slate-300">Your crypto compliance dashboard is ready with the latest updates.</p>
+                </div>
+                
+                <!-- System Status Alert -->
+                <div class="glass p-4 rounded-xl mb-8 border-l-4 border-green-500 bg-green-500/10">
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle text-green-400 text-xl mr-3"></i>
+                        <div>
+                            <h3 class="font-semibold">System Status: Operational</h3>
+                            <p class="text-sm text-slate-300">All services are running normally. Last updated: Just now</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stats Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="glass p-6 rounded-xl hover-lift">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">BTC Balance</h3>
+                            <i class="fab fa-bitcoin text-orange-400 text-2xl"></i>
+                        </div>
+                        <div class="text-3xl font-bold mb-2" id="btcBalance">0.12580000</div>
+                        <div class="text-sm text-slate-400" id="usdEquivalent">$4,832.50 USD</div>
+                        <div class="progress-bar mt-3">
+                            <div class="progress-fill bg-green-500" style="width: 65%"></div>
+                        </div>
+                        <div class="text-xs text-slate-400 mt-1">65% of monthly limit</div>
+                    </div>
+                    
+                    <div class="glass p-6 rounded-xl hover-lift">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">Active Sessions</h3>
+                            <i class="fas fa-users text-blue-400 text-2xl"></i>
+                        </div>
+                        <div class="text-3xl font-bold mb-2">12,584</div>
+                        <div class="text-sm text-slate-400">+5.2% from last week</div>
+                        <div class="progress-bar mt-3">
+                            <div class="progress-fill bg-blue-500" style="width: 42%"></div>
+                        </div>
+                        <div class="text-xs text-slate-400 mt-1">42% of capacity</div>
+                    </div>
+                    
+                    <div class="glass p-6 rounded-xl hover-lift">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">Risk Score</h3>
+                            <i class="fas fa-shield-alt text-green-400 text-2xl"></i>
+                        </div>
+                        <div class="text-3xl font-bold mb-2">87%</div>
+                        <div class="text-sm text-slate-400">Low risk profile</div>
+                        <div class="progress-bar mt-3">
+                            <div class="progress-fill bg-green-500" style="width: 87%"></div>
+                        </div>
+                        <div class="text-xs text-slate-400 mt-1">Excellent compliance rating</div>
+                    </div>
+                    
+                    <div class="glass p-6 rounded-xl hover-lift">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">Transactions</h3>
+                            <i class="fas fa-exchange-alt text-purple-400 text-2xl"></i>
+                        </div>
+                        <div class="text-3xl font-bold mb-2">1,247</div>
+                        <div class="text-sm text-slate-400">+12.7% this month</div>
+                        <div class="progress-bar mt-3">
+                            <div class="progress-fill bg-purple-500" style="width: 78%"></div>
+                        </div>
+                        <div class="text-xs text-slate-400 mt-1">78% of target</div>
+                    </div>
+                </div>
+                
+                <!-- Charts and Analytics -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="glass p-6 rounded-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-semibold">Transaction Volume</h3>
+                            <div class="flex space-x-2">
+                                <button class="text-xs bg-slate-700 px-2 py-1 rounded">24H</button>
+                                <button class="text-xs bg-blue-500 px-2 py-1 rounded">7D</button>
+                                <button class="text-xs bg-slate-700 px-2 py-1 rounded">30D</button>
+                            </div>
+                        </div>
+                        <div class="h-64">
+                            <canvas id="transactionChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="glass p-6 rounded-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-semibold">Risk Distribution</h3>
+                            <div class="text-sm text-slate-400">Real-time monitoring</div>
+                        </div>
+                        <div class="h-64">
+                            <canvas id="riskChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="glass p-6 rounded-xl gradient-primary/20 border border-blue-500/30">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-rocket text-blue-400 text-2xl mr-3"></i>
+                            <h3 class="text-lg font-semibold">Quick Deposit</h3>
+                        </div>
+                        <p class="text-sm text-slate-300 mb-4">Add funds to your account instantly with our secure Bitcoin gateway.</p>
+                        <button class="w-full gradient-primary py-2 rounded-lg text-sm hover:opacity-90 transition-opacity">
+                            Deposit Now
+                        </button>
+                    </div>
+                    
+                    <div class="glass p-6 rounded-xl gradient-success/20 border border-green-500/30">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-shield-check text-green-400 text-2xl mr-3"></i>
+                            <h3 class="text-lg font-semibold">Compliance Check</h3>
+                        </div>
+                        <p class="text-sm text-slate-300 mb-4">Verify your account status and ensure seamless transactions.</p>
+                        <button class="w-full gradient-success py-2 rounded-lg text-sm hover:opacity-90 transition-opacity">
+                            Check Status
+                        </button>
+                    </div>
+                    
+                    <div class="glass p-6 rounded-xl gradient-secondary/20 border border-purple-500/30">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-robot text-purple-400 text-2xl mr-3"></i>
+                            <h3 class="text-lg font-semibold">AI Assistant</h3>
+                        </div>
+                        <p class="text-sm text-slate-300 mb-4">Get instant help with our AI-powered compliance assistant.</p>
+                        <button class="w-full gradient-secondary py-2 rounded-lg text-sm hover:opacity-90 transition-opacity">
+                            Ask AI
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="glass p-6 rounded-xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-semibold">Recent Transactions</h3>
+                        <div class="flex space-x-2">
+                            <button class="text-sm bg-slate-700 px-3 py-1 rounded">All</button>
+                            <button class="text-sm bg-slate-800 px-3 py-1 rounded">Deposits</button>
+                            <button class="text-sm bg-slate-800 px-3 py-1 rounded">Withdrawals</button>
+                            <button class="text-sm gradient-primary px-3 py-1 rounded hover:opacity-90">View All</button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-700">
+                                    <th class="text-left py-3">Transaction ID</th>
+                                    <th class="text-left py-3">Type</th>
+                                    <th class="text-left py-3">Amount</th>
+                                    <th class="text-left py-3">Status</th>
+                                    <th class="text-left py-3">Date</th>
+                                    <th class="text-left py-3">Risk Level</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                                    <td class="py-3 font-mono text-blue-400">TX-7A8B9C0D</td>
+                                    <td class="py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-300 flex items-center w-fit">
+                                            <i class="fas fa-arrow-down mr-1"></i> Deposit
+                                        </span>
+                                    </td>
+                                    <td class="py-3 font-medium">0.025000 BTC</td>
+                                    <td class="py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-300 flex items-center w-fit">
+                                            <i class="fas fa-check-circle mr-1"></i> Completed
+                                        </span>
+                                    </td>
+                                    <td class="py-3 text-slate-300">2023-10-15 14:30</td>
+                                    <td class="py-3">
+                                        <div class="flex items-center">
+                                            <div class="w-16 bg-slate-700 rounded-full h-2 mr-2">
+                                                <div class="bg-green-500 h-2 rounded-full" style="width: 15%"></div>
+                                            </div>
+                                            <span class="text-xs">Low</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                                    <td class="py-3 font-mono text-blue-400">TX-1E2F3G4H</td>
+                                    <td class="py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300 flex items-center w-fit">
+                                            <i class="fas fa-arrow-up mr-1"></i> Withdrawal
+                                        </span>
+                                    </td>
+                                    <td class="py-3 font-medium">0.010000 BTC</td>
+                                    <td class="py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-300 flex items-center w-fit">
+                                            <i class="fas fa-clock mr-1"></i> Pending
+                                        </span>
+                                    </td>
+                                    <td class="py-3 text-slate-300">2023-10-15 12:15</td>
+                                    <td class="py-3">
+                                        <div class="flex items-center">
+                                            <div class="w-16 bg-slate-700 rounded-full h-2 mr-2">
+                                                <div class="bg-yellow-500 h-2 rounded-full" style="width: 45%"></div>
+                                            </div>
+                                            <span class="text-xs">Medium</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                                    <td class="py-3 font-mono text-blue-400">TX-5I6J7K8L</td>
+                                    <td class="py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-300 flex items-center w-fit">
+                                            <i class="fas fa-arrow-down mr-1"></i> Deposit
+                                        </span>
+                                    </td>
+                                    <td class="py-3 font-medium">0.050000 BTC</td>
+                                    <td class="py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-300 flex items-center w-fit">
+                                            <i class="fas fa-check-circle mr-1"></i> Completed
+                                        </span>
+                                    </td>
+                                    <td class="py-3 text-slate-300">2023-10-14 09:45</td>
+                                    <td class="py-3">
+                                        <div class="flex items-center">
+                                            <div class="w-16 bg-slate-700 rounded-full h-2 mr-2">
+                                                <div class="bg-red-500 h-2 rounded-full" style="width: 85%"></div>
+                                            </div>
+                                            <span class="text-xs">High</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/30 transition-colors">
+                                    <td class="py-3 font-mono text-blue-400">TX-9M0N1O2P</td>
+                                    <td class="py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300 flex items-center w-fit">
+                                            <i class="fas fa-arrow-up mr-1"></i> Withdrawal
+                                        </span>
+                                    </td>
+                                    <td class="py-3 font-medium">0.005000 BTC</td>
+                                    <td class="py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-300 flex items-center w-fit">
+                                            <i class="fas fa-check-circle mr-1"></i> Completed
+                                        </span>
+                                    </td>
+                                    <td class="py-3 text-slate-300">2023-10-13 16:20</td>
+                                    <td class="py-3">
+                                        <div class="flex items-center">
+                                            <div class="w-16 bg-slate-700 rounded-full h-2 mr-2">
+                                                <div class="bg-green-500 h-2 rounded-full" style="width: 25%"></div>
+                                            </div>
+                                            <span class="text-xs">Low</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- AI Assistant -->
+    <div class="ai-assistant">
+        <div id="aiBubble" class="ai-bubble glass-dark p-4 rounded-xl mb-4 w-80">
+            <div class="flex items-start mb-3">
+                <div class="gradient-secondary p-2 rounded-full mr-3">
+                    <i class="fas fa-robot text-white"></i>
+                </div>
+                <div>
+                    <p class="font-medium">ChainGate AI Assistant</p>
+                    <p class="text-sm text-slate-300">How can I help with your crypto compliance needs today?</p>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <button class="w-full text-left p-2 rounded-lg hover:bg-slate-700/50 text-sm transition-colors">
+                    <i class="fas fa-search mr-2"></i> Check transaction status
+                </button>
+                <button class="w-full text-left p-2 rounded-lg hover:bg-slate-700/50 text-sm transition-colors">
+                    <i class="fas fa-chart-line mr-2"></i> Analyze risk profile
+                </button>
+                <button class="w-full text-left p-2 rounded-lg hover:bg-slate-700/50 text-sm transition-colors">
+                    <i class="fas fa-file-alt mr-2"></i> Generate compliance report
+                </button>
+                <button class="w-full text-left p-2 rounded-lg hover:bg-slate-700/50 text-sm transition-colors">
+                    <i class="fas fa-question-circle mr-2"></i> Explain KYC requirements
+                </button>
+            </div>
+        </div>
+        <button id="aiAssistantBtn" class="gradient-secondary w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover-lift">
+            <i class="fas fa-robot text-white text-xl"></i>
+        </button>
+    </div>
+    
+    <!-- JavaScript -->
+    <script>
+        // Global variables
+        let isAuthenticated = false;
+        let currentUser = null;
+
+        // Simulate loading
+        setTimeout(() => {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            
+            // Check authentication status
+            checkAuthStatus();
+            
+            // Initialize charts
+            initCharts();
+            
+            // Initialize AI assistant
+            initAIAssistant();
+            
+            // Initialize sidebar toggle for mobile
+            initSidebarToggle();
+            
+            // Initialize button event listeners
+            initButtonListeners();
+        }, 2000);
+
+        // Check authentication status with retry logic
+        async function checkAuthStatus(retryCount = 0) {
+            const maxRetries = 3;
+            const retryDelay = 1000; // 1 second
+
+            try {
+                console.log(`Checking auth status (attempt ${retryCount + 1}/${maxRetries + 1})...`);
+
+                const response = await fetch('/api/auth/status', {
+                    credentials: 'include',
+                    timeout: 5000 // 5 second timeout
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('Auth status response:', data);
+
+                if (data.is_authenticated) {
+                    isAuthenticated = true;
+                    currentUser = data;
+                    updateUserInterface();
+                    loadPlayerData();
+                    console.log('Authentication successful!');
+                } else {
+                    // Only redirect if we're sure the user is not authenticated
+                    // Add a small delay to allow session cookies to be set
+                    setTimeout(() => {
+                        // Double-check authentication status before redirecting
+                        if (!isAuthenticated) {
+                            console.log('User not authenticated, redirecting to login');
+                            window.location.href = 'login.html';
+                        }
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error(`Error checking auth status (attempt ${retryCount + 1}):`, error);
+
+                if (retryCount < maxRetries) {
+                    console.log(`Retrying in ${retryDelay}ms...`);
+                    setTimeout(() => {
+                        checkAuthStatus(retryCount + 1);
+                    }, retryDelay);
+                } else {
+                    // After all retries failed, show a more helpful message
+                    console.error('All authentication attempts failed');
+                    showNotification('Authentication check failed. You may need to refresh the page or check your connection.', 'warning');
+
+                    // Don't redirect immediately - let the user decide
+                    // They might still be able to use the page
+                    setTimeout(() => {
+                        if (!isAuthenticated) {
+                            console.log('Final fallback: redirecting to login after all retries failed');
+                            window.location.href = 'login.html';
+                        }
+                    }, 5000);
+                }
+            }
+        }
+
+        // Update user interface based on auth status
+        function updateUserInterface() {
+            if (isAuthenticated && currentUser) {
+                document.getElementById('sidebarUserName').textContent = currentUser.username || 'User';
+                document.getElementById('sidebarUserRole').textContent = currentUser.role ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1) : 'Player';
+                document.getElementById('topbarUserName').textContent = currentUser.username || 'User';
+                document.getElementById('topbarUserRole').textContent = currentUser.role ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1) : 'Player';
+            }
+        }
+
+        // Load player data
+        async function loadPlayerData() {
+            try {
+                const response = await fetch('/api/player/balance', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('btcBalance').textContent = data.btc_balance.toFixed(8);
+                    document.getElementById('usdEquivalent').textContent = `$${data.usd_equivalent.toFixed(2)} USD`;
+                }
+            } catch (error) {
+                console.error('Error loading player data:', error);
+            }
+        }
+
+        // Initialize button event listeners
+        function initButtonListeners() {
+            console.log('Initializing button listeners...');
+
+            // Top navigation buttons - be more specific
+            const topNavButtons = document.querySelectorAll('.hidden.md\\:flex button');
+            const depositBtn = topNavButtons[0]; // First button (Deposit)
+            const transferBtn = topNavButtons[1]; // Second button (Transfer)
+
+            console.log('Top nav buttons found:', topNavButtons.length);
+
+            if (depositBtn) {
+                console.log('Deposit button found:', depositBtn);
+                depositBtn.addEventListener('click', showDepositModal);
+            }
+
+            if (transferBtn) {
+                console.log('Transfer button found:', transferBtn);
+                transferBtn.addEventListener('click', showWithdrawModal);
+            }
+
+            // Action cards buttons - be more specific
+            const actionCards = document.querySelectorAll('.grid.grid-cols-1.md\\:grid-cols-3 .glass');
+            console.log('Action cards found:', actionCards.length);
+
+            if (actionCards.length >= 3) {
+                const depositNowBtn = actionCards[0].querySelector('button');
+                const checkStatusBtn = actionCards[1].querySelector('button');
+                const askAIBtn = actionCards[2].querySelector('button');
+
+                console.log('Action card buttons:', { depositNowBtn, checkStatusBtn, askAIBtn });
+
+                if (depositNowBtn) {
+                    depositNowBtn.addEventListener('click', showDepositModal);
+                }
+
+                if (checkStatusBtn) {
+                    checkStatusBtn.addEventListener('click', checkComplianceStatus);
+                }
+
+                if (askAIBtn) {
+                    askAIBtn.addEventListener('click', toggleAIAssistant);
+                }
+            }
+
+            // Navigation buttons
+            const navButtons = document.querySelectorAll('.nav-btn');
+            console.log('Navigation buttons found:', navButtons.length);
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', handleNavigation);
+            });
+
+            // AI Assistant button
+            const aiAssistantBtn = document.getElementById('aiAssistantBtn');
+            console.log('AI Assistant button found:', aiAssistantBtn);
+            if (aiAssistantBtn) {
+                aiAssistantBtn.addEventListener('click', toggleAIAssistant);
+            }
+
+            // Logout functionality - target the user menu more specifically
+            const userMenu = document.querySelector('.flex.items-center.space-x-3 .w-10.h-10.gradient-primary.rounded-full').parentElement;
+            console.log('User menu found:', userMenu);
+            if (userMenu) {
+                userMenu.addEventListener('click', logout);
+            }
+
+            console.log('Button listeners initialized');
+        }
+
+        // Handle navigation
+        function handleNavigation(e) {
+            e.preventDefault();
+            
+            // Remove active class from all nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('tab-active', 'gradient-primary', 'text-white');
+                btn.classList.add('text-slate-300');
+            });
+            
+            // Add active class to clicked button
+            e.currentTarget.classList.add('tab-active', 'gradient-primary', 'text-white');
+            e.currentTarget.classList.remove('text-slate-300');
+            
+            // Update main content title
+            const title = e.currentTarget.querySelector('span').textContent;
+            const titleElement = document.querySelector('h2.text-xl.font-semibold');
+            if (titleElement) {
+                titleElement.textContent = title + ' Overview';
+            }
+        }
+
+        // Show deposit modal
+        function showDepositModal() {
+            showNotification('Opening deposit interface...', 'info');
+            // Here you would typically open a modal or redirect to deposit page
+            generateDepositAddress();
+        }
+
+        // Show withdraw modal
+        function showWithdrawModal() {
+            showNotification('Opening withdrawal interface...', 'info');
+            // Here you would typically open a modal or redirect to withdraw page
+        }
+
+        // Check compliance status
+        async function checkComplianceStatus() {
+            try {
+                const response = await fetch('/api/player/balance', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showNotification('Your account is in good standing with low risk profile', 'success');
+                } else {
+                    showNotification('Please contact support for compliance issues', 'warning');
+                }
+            } catch (error) {
+                console.error('Error checking compliance status:', error);
+                showNotification('Error checking compliance status', 'error');
+            }
+        }
+
+        // Toggle AI assistant
+        function toggleAIAssistant() {
+            const aiBubble = document.getElementById('aiBubble');
+            if (aiBubble) {
+                aiBubble.classList.toggle('active');
+            }
+        }
+
+        // Generate deposit address
+        async function generateDepositAddress() {
+            try {
+                const response = await fetch('/api/player/deposit/address', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showNotification('Deposit address generated: ' + data.deposit_address, 'success');
+                    // You could display the QR code here
+                } else {
+                    showNotification('Error generating deposit address', 'error');
+                }
+            } catch (error) {
+                console.error('Error generating deposit address:', error);
+                showNotification('Error generating deposit address', 'error');
+            }
+        }
+
+        // Logout function
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                showNotification('Logged out successfully', 'success');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            } catch (error) {
+                console.error('Logout error:', error);
+                showNotification('Logout failed', 'error');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 glass p-4 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform ${
+                type === 'success' ? 'border-l-4 border-green-500' : 
+                type === 'error' ? 'border-l-4 border-red-500' : 
+                type === 'warning' ? 'border-l-4 border-yellow-500' : 'border-l-4 border-blue-500'
+            }`;
+            
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${
+                        type === 'success' ? 'fa-check-circle text-green-400' : 
+                        type === 'error' ? 'fa-exclamation-circle text-red-400' : 
+                        type === 'warning' ? 'fa-exclamation-triangle text-yellow-400' : 'fa-info-circle text-blue-400'
+                    } mr-3"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // Animate out after 3 seconds
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        function initCharts() {
+            // Transaction Volume Chart
+            const transactionCtx = document.getElementById('transactionChart').getContext('2d');
+            new Chart(transactionCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+                    datasets: [{
+                        label: 'BTC Volume',
+                        data: [12, 19, 15, 25, 22, 30, 28, 35, 32, 40],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Risk Distribution Chart
+            const riskCtx = document.getElementById('riskChart').getContext('2d');
+            new Chart(riskCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+                    datasets: [{
+                        data: [65, 25, 10],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(239, 68, 68, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                padding: 20
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function initAIAssistant() {
+            const aiBtn = document.getElementById('aiAssistantBtn');
+            const aiBubble = document.getElementById('aiBubble');
+            
+            aiBtn.addEventListener('click', () => {
+                aiBubble.classList.toggle('active');
+            });
+            
+            // Close AI bubble when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!aiBtn.contains(e.target) && !aiBubble.contains(e.target)) {
+                    aiBubble.classList.remove('active');
+                }
+            });
+        }
+        
+        function initSidebarToggle() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.querySelector('.glass-dark.w-64');
+            
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('hidden');
+            });
+            
+            // Close sidebar when clicking on a link (for mobile)
+            const navLinks = document.querySelectorAll('.nav-btn');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth < 1024) {
+                        sidebar.classList.add('hidden');
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>

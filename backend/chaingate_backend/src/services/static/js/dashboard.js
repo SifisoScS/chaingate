@@ -113,7 +113,6 @@ class Dashboard {
         const styles = {
             'completed': 'bg-green-600/20 text-green-400',
             'pending': 'bg-yellow-600/20 text-yellow-400',
-            'pending_admin': 'bg-blue-600/20 text-blue-400',
             'failed': 'bg-red-600/20 text-red-400',
             'rejected': 'bg-red-600/20 text-red-400',
             'flagged': 'bg-purple-600/20 text-purple-400',
@@ -126,14 +125,15 @@ class Dashboard {
 
     getStatusText(status) {
         const texts = {
-            'pending_admin': 'PENDING APPROVAL',
             'broadcasting': 'BROADCASTING'
         };
         return texts[status] || status.toUpperCase();
     }
 
     renderPagination(currentPage, totalPages) {
-        if (totalPages <= 1) return;
+        if (totalPages <= 1) {
+          return;
+        }
         
         // Implementation for pagination controls
         // This would add pagination buttons below the transaction table
@@ -225,212 +225,7 @@ class Dashboard {
         }
     }
 
-    // Admin Dashboard Functions
-    async initAdminDashboard() {
-        await this.loadAdminStats();
-        await this.loadAdminTransactions();
-        this.createAdminCharts();
-    }
 
-    async loadAdminStats() {
-        try {
-            const response = await fetch('/api/admin/dashboard/stats', {
-                credentials: 'include'
-            });
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                this.renderAdminStats(data.stats);
-            }
-        } catch (error) {
-            console.error('Error loading admin stats:', error);
-        }
-    }
-
-    renderAdminStats(stats) {
-        const container = document.getElementById('adminStats');
-        container.innerHTML = `
-            <div class="glass-dark p-6 rounded-xl animate-fadeIn">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">Total Users</h3>
-                    <i class="fas fa-users text-blue-400 text-2xl"></i>
-                </div>
-                <div class="text-3xl font-bold text-blue-400 mb-2">${stats.users.total}</div>
-                <div class="text-sm text-gray-400">${stats.users.active} active, ${stats.users.inactive} inactive</div>
-            </div>
-            <div class="glass-dark p-6 rounded-xl animate-fadeIn">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">Pending Reviews</h3>
-                    <i class="fas fa-clock text-yellow-400 text-2xl"></i>
-                </div>
-                <div class="text-3xl font-bold text-yellow-400 mb-2">${stats.transactions.pending}</div>
-                <div class="text-sm text-gray-400">Require admin action</div>
-            </div>
-            <div class="glass-dark p-6 rounded-xl animate-fadeIn">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">Flagged Items</h3>
-                    <i class="fas fa-flag text-red-400 text-2xl"></i>
-                </div>
-                <div class="text-3xl font-bold text-red-400 mb-2">${stats.transactions.flagged}</div>
-                <div class="text-sm text-gray-400">Need investigation</div>
-            </div>
-            <div class="glass-dark p-6 rounded-xl animate-fadeIn">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">Today's Activity</h3>
-                    <i class="fas fa-chart-line text-green-400 text-2xl"></i>
-                </div>
-                <div class="text-3xl font-bold text-green-400 mb-2">${stats.transactions.today}</div>
-                <div class="text-sm text-gray-400">New transactions</div>
-            </div>
-        `;
-    }
-
-    async loadAdminTransactions() {
-        try {
-            const response = await fetch('/api/admin/transactions?status=pending&limit=10', {
-                credentials: 'include'
-            });
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                this.renderAdminTransactionList(data.transactions);
-            }
-        } catch (error) {
-            console.error('Error loading admin transactions:', error);
-        }
-    }
-
-    renderAdminTransactionList(transactions) {
-        const content = document.getElementById('adminContent');
-        
-        if (transactions.length === 0) {
-            content.innerHTML = `
-                <div class="text-center py-12">
-                    <i class="fas fa-check-circle text-6xl text-green-400 mb-4"></i>
-                    <h3 class="text-xl font-semibold mb-2">All Caught Up!</h3>
-                    <p class="text-gray-400">No pending transactions require review</p>
-                </div>
-            `;
-            return;
-        }
-        
-        content.innerHTML = `
-            <h3 class="text-xl font-semibold mb-6">Pending Transactions</h3>
-            <div class="space-y-4">
-                ${transactions.map(tx => `
-                    <div class="glass p-4 rounded-lg animate-fadeIn">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-4">
-                                <div class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                                    <i class="fas ${tx.type === 'deposit' ? 'fa-arrow-down' : 'fa-arrow-up'} text-white"></i>
-                                </div>
-                                <div>
-                                    <div class="font-semibold">${tx.user ? tx.user.username : 'Unknown User'}</div>
-                                    <div class="text-sm text-gray-400">${tx.type.toUpperCase()} • ${parseFloat(tx.amount).toFixed(8)} BTC</div>
-                                    <div class="text-xs text-gray-500">${new Date(tx.created_at).toLocaleString()}</div>
-                                </div>
-                            </div>
-                            <div class="flex space-x-2">
-                                <button onclick="dashboard.approveTransaction('${tx.id}')" class="gradient-success px-4 py-2 rounded-lg text-sm hover:opacity-90 transition-opacity">
-                                    <i class="fas fa-check mr-1"></i>Approve
-                                </button>
-                                <button onclick="dashboard.rejectTransaction('${tx.id}')" class="gradient-danger px-4 py-2 rounded-lg text-sm hover:opacity-90 transition-opacity">
-                                    <i class="fas fa-times mr-1"></i>Reject
-                                </button>
-                                <button onclick="dashboard.flagTransaction('${tx.id}')" class="gradient-warning px-4 py-2 rounded-lg text-sm hover:opacity-90 transition-opacity">
-                                    <i class="fas fa-flag mr-1"></i>Flag
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-
-    async approveTransaction(txId) {
-        if (!confirm('Are you sure you want to approve this transaction?')) return;
-        
-        try {
-            const response = await fetch(`/api/admin/transactions/${txId}/approve`, {
-                method: 'POST',
-                credentials: 'include'
-            });
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                app.showToast('Transaction approved successfully', 'success');
-                this.loadAdminTransactions();
-                this.loadAdminStats();
-            } else {
-                app.showToast(data.message || 'Failed to approve transaction', 'error');
-            }
-        } catch (error) {
-            console.error('Error approving transaction:', error);
-            app.showToast('Failed to approve transaction', 'error');
-        }
-    }
-
-    async rejectTransaction(txId) {
-        const reason = prompt('Please provide a reason for rejection:');
-        if (!reason) return;
-        
-        try {
-            const response = await fetch(`/api/admin/transactions/${txId}/reject`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify({ reason })
-            });
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                app.showToast('Transaction rejected successfully', 'success');
-                this.loadAdminTransactions();
-                this.loadAdminStats();
-            } else {
-                app.showToast(data.message || 'Failed to reject transaction', 'error');
-            }
-        } catch (error) {
-            console.error('Error rejecting transaction:', error);
-            app.showToast('Failed to reject transaction', 'error');
-        }
-    }
-
-    async flagTransaction(txId) {
-        const reason = prompt('Please provide a reason for flagging:');
-        if (!reason) return;
-        
-        try {
-            const response = await fetch(`/api/admin/transactions/${txId}/flag`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify({ reason })
-            });
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                app.showToast('Transaction flagged successfully', 'success');
-                this.loadAdminTransactions();
-                this.loadAdminStats();
-            } else {
-                app.showToast(data.message || 'Failed to flag transaction', 'error');
-            }
-        } catch (error) {
-            console.error('Error flagging transaction:', error);
-            app.showToast('Failed to flag transaction', 'error');
-        }
-    }
-
-    createAdminCharts() {
-        // This would create Chart.js charts for admin analytics
-        // Implementation would go here for transaction volume charts, etc.
-    }
 
     // Utility Functions
     formatCurrency(amount, currency = 'BTC') {
@@ -458,9 +253,15 @@ class Dashboard {
         const hours = Math.floor(diff / 3600000);
         const days = Math.floor(diff / 86400000);
         
-        if (minutes < 1) return 'Just now';
-        if (minutes < 60) return `${minutes}m ago`;
-        if (hours < 24) return `${hours}h ago`;
+        if (minutes < 1) {
+          return 'Just now';
+        }
+        if (minutes < 60) {
+          return `${minutes}m ago`;
+        }
+        if (hours < 24) {
+          return `${hours}h ago`;
+        }
         return `${days}d ago`;
     }
 }
