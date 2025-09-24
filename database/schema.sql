@@ -116,5 +116,3 @@ CREATE INDEX IX_KYCDocuments_UserId ON KYCDocuments (user_id);
 CREATE INDEX IX_RiskAssessments_UserId ON RiskAssessments (user_id);
 CREATE INDEX IX_AuditLogs_UserId ON AuditLogs (user_id);
 CREATE INDEX IX_ComplianceReports_ReportType ON ComplianceReports (report_type);
-
-

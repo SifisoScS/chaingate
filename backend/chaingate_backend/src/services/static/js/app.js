@@ -3,6 +3,7 @@ class ChainGateApp {
     constructor() {
         this.currentUser = null;
         this.isAuthenticated = false;
+        this.socket = null;
         this.init();
     }
 
@@ -15,6 +16,9 @@ class ChainGateApp {
 
         // Check authentication status
         await this.checkAuthStatus();
+        
+        // Initialize WebSocket connection
+        this.initializeWebSocket();
         
         // Set up event listeners
         this.setupEventListeners();
@@ -64,10 +68,7 @@ class ChainGateApp {
         document.getElementById('refreshBtn').addEventListener('click', () => this.refreshPlayerData());
         document.getElementById('copyAddressBtn').addEventListener('click', () => this.copyWalletAddress());
 
-        // Admin dashboard buttons
-        document.getElementById('viewTransactionsBtn').addEventListener('click', () => this.showAdminTransactions());
-        document.getElementById('viewUsersBtn').addEventListener('click', () => this.showAdminUsers());
-        document.getElementById('generateReportBtn').addEventListener('click', () => this.generateReport());
+
 
         // Close modals when clicking outside
         this.setupModalCloseOnOutsideClick();
@@ -87,11 +88,7 @@ class ChainGateApp {
 
     showAppropriateScreen() {
         if (this.isAuthenticated) {
-            if (this.currentUser.role === 'admin') {
-                this.showAdminDashboard();
-            } else {
-                this.showPlayerDashboard();
-            }
+            this.showPlayerDashboard();
         } else {
             this.showWelcomeScreen();
         }
@@ -100,26 +97,17 @@ class ChainGateApp {
     showWelcomeScreen() {
         document.getElementById('welcomeScreen').classList.remove('hidden');
         document.getElementById('playerDashboard').classList.add('hidden');
-        document.getElementById('adminDashboard').classList.add('hidden');
     }
 
     showPlayerDashboard() {
         document.getElementById('welcomeScreen').classList.add('hidden');
         document.getElementById('playerDashboard').classList.remove('hidden');
-        document.getElementById('adminDashboard').classList.add('hidden');
-        
+
         // Load player data
         this.loadPlayerData();
     }
 
-    showAdminDashboard() {
-        document.getElementById('welcomeScreen').classList.add('hidden');
-        document.getElementById('playerDashboard').classList.add('hidden');
-        document.getElementById('adminDashboard').classList.remove('hidden');
-        
-        // Load admin data
-        this.loadAdminData();
-    }
+
 
     updateUserInterface() {
         if (this.isAuthenticated) {
@@ -131,9 +119,9 @@ class ChainGateApp {
             
             const roleElement = document.getElementById('userRole');
             roleElement.textContent = this.currentUser.role.toUpperCase();
-            roleElement.className = `px-2 py-1 rounded-full text-xs font-medium ${
-                this.currentUser.role === 'admin' ? 'bg-purple-600' : 'bg-blue-600'
-            }`;
+            roleElement.className = 'px-2 py-1 rounded-full text-xs font-medium bg-blue-600';
+
+            // Admin button removed as per user request
         } else {
             document.getElementById('authButtons').classList.remove('hidden');
             document.getElementById('userInfo').classList.add('hidden');
@@ -272,6 +260,12 @@ class ChainGateApp {
             this.updateUserInterface();
             this.showWelcomeScreen();
             this.showToast('Logged out successfully', 'success');
+            
+            // Disconnect WebSocket
+            if (this.socket) {
+                this.socket.disconnect();
+                this.socket = null;
+            }
         } catch (error) {
             console.error('Logout error:', error);
             this.showToast('Logout failed', 'error');
@@ -447,63 +441,7 @@ class ChainGateApp {
         });
     }
 
-    // Admin dashboard functions
-    async loadAdminData() {
-        try {
-            const response = await fetch('/api/admin/dashboard/stats', {
-                credentials: 'include'
-            });
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                this.renderAdminStats(data.stats);
-            }
-        } catch (error) {
-            console.error('Error loading admin data:', error);
-        }
-    }
 
-    renderAdminStats(stats) {
-        const container = document.getElementById('adminStats');
-        container.innerHTML = `
-            <div class="glass-dark p-6 rounded-xl">
-                <h3 class="text-lg font-semibold mb-2">Total Users</h3>
-                <div class="text-3xl font-bold text-blue-400">${stats.users.total}</div>
-                <div class="text-sm text-gray-400">${stats.users.active} active</div>
-            </div>
-            <div class="glass-dark p-6 rounded-xl">
-                <h3 class="text-lg font-semibold mb-2">Pending Transactions</h3>
-                <div class="text-3xl font-bold text-yellow-400">${stats.transactions.pending}</div>
-                <div class="text-sm text-gray-400">Require review</div>
-            </div>
-            <div class="glass-dark p-6 rounded-xl">
-                <h3 class="text-lg font-semibold mb-2">Flagged Items</h3>
-                <div class="text-3xl font-bold text-red-400">${stats.transactions.flagged}</div>
-                <div class="text-sm text-gray-400">Need attention</div>
-            </div>
-            <div class="glass-dark p-6 rounded-xl">
-                <h3 class="text-lg font-semibold mb-2">Today's Activity</h3>
-                <div class="text-3xl font-bold text-green-400">${stats.transactions.today}</div>
-                <div class="text-sm text-gray-400">Transactions</div>
-            </div>
-        `;
-    }
-
-    async showAdminTransactions() {
-        // Implementation for admin transaction view
-        document.getElementById('adminContent').innerHTML = '<p class="text-center py-8">Loading transactions...</p>';
-        // This would be implemented with a more detailed admin interface
-    }
-
-    async showAdminUsers() {
-        // Implementation for admin user management
-        document.getElementById('adminContent').innerHTML = '<p class="text-center py-8">Loading users...</p>';
-        // This would be implemented with a more detailed admin interface
-    }
-
-    async generateReport() {
-        this.showToast('Report generation feature coming soon!', 'info');
-    }
 
     // Utility functions
     setLoginLoading(loading) {
@@ -598,6 +536,49 @@ class ChainGateApp {
         } catch (error) {
             console.error('Error viewing transaction details:', error);
         }
+    }
+
+    // WebSocket functions
+    initializeWebSocket() {
+        if (this.isAuthenticated) {
+            this.socket = io();
+            
+            this.socket.on('connect', () => {
+                console.log('WebSocket connected');
+                this.socket.emit('join', { user_id: this.currentUser.id, role: this.currentUser.role });
+            });
+            
+            this.socket.on('disconnect', () => {
+                console.log('WebSocket disconnected');
+            });
+            
+            this.socket.on('transaction_update', (data) => {
+                this.handleTransactionUpdate(data);
+            });
+            
+            this.socket.on('risk_alert', (data) => {
+                this.handleRiskAlert(data);
+            });
+            
+            this.socket.on('compliance_report', (data) => {
+                this.handleComplianceReport(data);
+            });
+        }
+    }
+
+    handleTransactionUpdate(data) {
+        this.showToast(`Transaction ${data.transaction_id} updated to ${data.status}`, 'info');
+        if (this.isAuthenticated && this.currentUser.role === 'player') {
+            this.refreshPlayerData();
+        }
+    }
+
+    handleRiskAlert(data) {
+        this.showToast(`Risk Alert: ${data.message}`, 'warning');
+    }
+
+    handleComplianceReport(data) {
+        this.showToast(`Compliance Report: ${data.message}`, 'info');
     }
 }
 

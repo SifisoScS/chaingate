@@ -65,27 +65,27 @@ class BitcoinSimulator:
         """Background process to simulate deposit confirmations"""
         from src.models.user import Transaction, Wallet, db
         from flask import current_app
-        
+
         with current_app.app_context():
             try:
                 # Initial delay before first confirmation
                 time.sleep(random.randint(10, 30))
-                
+
                 transaction = Transaction.query.get(tx_id)
                 if not transaction:
                     return
-                
+
                 # Check for random failure
                 if random.randint(1, 100) <= self.transaction_failure_rate_percent:
-                    transaction.status = 'failed'
-                    transaction.admin_notes = 'Network congestion - transaction failed'
-                    db.session.commit()
-                    return
-                
+                    return self._update_transaction_status(
+                        transaction,
+                        'failed',
+                        'Network congestion - transaction failed'
+                    )
                 # Update to broadcasting
                 transaction.status = 'broadcasting'
                 db.session.commit()
-                
+
                 # Simulate confirmations
                 for conf in range(1, self.confirmation_threshold + 1):
                     delay = random.randint(
@@ -93,24 +93,24 @@ class BitcoinSimulator:
                         self.deposit_confirmation_interval_max_seconds
                     )
                     time.sleep(delay)
-                    
+
                     transaction = Transaction.query.get(tx_id)
                     if not transaction or transaction.status == 'failed':
                         return
-                    
+
                     transaction.confirmations = conf
                     if conf == 1:
                         transaction.status = 'pending'
                     elif conf >= self.confirmation_threshold:
                         transaction.status = 'completed'
-                        
-                        # Update wallet balance
-                        wallet = Wallet.query.filter_by(user_id=transaction.user_id).first()
-                        if wallet:
+
+                        if wallet := Wallet.query.filter_by(
+                            user_id=transaction.user_id
+                        ).first():
                             wallet.balance += transaction.amount
-                    
+
                     db.session.commit()
-                    
+
             except Exception as e:
                 print(f"Error in deposit confirmation simulation: {e}")
     
@@ -142,124 +142,80 @@ class BitcoinSimulator:
         db.session.add(transaction)
         db.session.commit()
         
-        # Check if admin approval is needed
-        if amount >= self.withdrawal_approval_threshold:
-            transaction.status = 'pending_admin'
-            db.session.commit()
-        else:
-            self._auto_approve_withdrawal(tx_id)
+        # Process withdrawal immediately
+        self._process_withdrawal(tx_id)
         
         return transaction, None
     
-    def _auto_approve_withdrawal(self, tx_id):
-        """Auto-approve small withdrawals"""
+    def _process_withdrawal(self, tx_id):
+        """Process withdrawal immediately"""
         threading.Thread(
             target=self._process_approved_withdrawal,
             args=(tx_id,),
             daemon=True
         ).start()
     
-    def approve_withdrawal(self, tx_id, admin_id):
-        """Admin approves a withdrawal"""
-        from src.models.user import Transaction, db
-        
-        transaction = Transaction.query.get(tx_id)
-        if not transaction or transaction.status != 'pending_admin':
-            return False, "Transaction not found or not pending approval"
-        
-        transaction.status = 'approved'
-        transaction.admin_notes = f"Approved by admin {admin_id}"
-        db.session.commit()
-        
-        # Start processing
-        threading.Thread(
-            target=self._process_approved_withdrawal,
-            args=(tx_id,),
-            daemon=True
-        ).start()
-        
-        return True, "Withdrawal approved"
+
     
     def _process_approved_withdrawal(self, tx_id):
         """Process an approved withdrawal"""
         from src.models.user import Transaction, Wallet, db
         from flask import current_app
-        
+
         with current_app.app_context():
             try:
                 transaction = Transaction.query.get(tx_id)
                 if not transaction:
                     return
-                
+
                 # Deduct from wallet balance
                 wallet = Wallet.query.filter_by(user_id=transaction.user_id).first()
                 if wallet and wallet.balance >= transaction.amount:
                     wallet.balance -= (transaction.amount + transaction.fee)
                     db.session.commit()
                 else:
-                    transaction.status = 'rejected'
-                    transaction.admin_notes = 'Insufficient balance at processing time'
-                    db.session.commit()
-                    return
-                
+                    return self._update_transaction_status(
+                        transaction,
+                        'rejected',
+                        'Insufficient balance at processing time'
+                    )
                 # Simulate broadcasting delay
                 time.sleep(self.withdrawal_broadcast_delay_seconds)
-                
+
                 transaction.status = 'broadcasting'
                 transaction.tx_hash = self.generate_tx_hash()
                 db.session.commit()
-                
+
                 # Simulate network propagation
                 time.sleep(random.randint(30, 120))
-                
+
                 transaction.status = 'completed'
                 db.session.commit()
-                
+
             except Exception as e:
                 print(f"Error in withdrawal processing: {e}")
+
+    def _update_transaction_status(self, transaction, status, notes):
+        """Update transaction status and notes"""
+        transaction.status = status
+        db.session.commit()
+        return
     
     def get_confirmation_status(self, tx_id):
         """Get current confirmation status of a transaction"""
         from src.models.user import Transaction
-        
-        transaction = Transaction.query.get(tx_id)
-        if not transaction:
+
+        if transaction := Transaction.query.get(tx_id):
+            return {
+                'transaction_id': transaction.id,
+                'status': transaction.status,
+                'confirmations': transaction.confirmations,
+                'amount': float(transaction.amount),
+                'type': transaction.type,
+                'tx_hash': transaction.tx_hash
+            }
+        else:
             return None
-        
-        return {
-            'transaction_id': transaction.id,
-            'status': transaction.status,
-            'confirmations': transaction.confirmations,
-            'amount': float(transaction.amount),
-            'type': transaction.type,
-            'tx_hash': transaction.tx_hash
-        }
     
-    def reject_withdrawal(self, tx_id, admin_id, reason):
-        """Admin rejects a withdrawal"""
-        from src.models.user import Transaction, db
-        
-        transaction = Transaction.query.get(tx_id)
-        if not transaction or transaction.status != 'pending_admin':
-            return False, "Transaction not found or not pending approval"
-        
-        transaction.status = 'rejected'
-        transaction.admin_notes = f"Rejected by admin {admin_id}: {reason}"
-        db.session.commit()
-        
-        return True, "Withdrawal rejected"
-    
-    def flag_transaction(self, tx_id, admin_id, reason):
-        """Flag a transaction for investigation"""
-        from src.models.user import Transaction, db
-        
-        transaction = Transaction.query.get(tx_id)
-        if not transaction:
-            return False, "Transaction not found"
-        
-        transaction.status = 'flagged'
-        transaction.admin_notes = f"Flagged by admin {admin_id}: {reason}"
-        db.session.commit()
-        
-        return True, "Transaction flagged"
+
 

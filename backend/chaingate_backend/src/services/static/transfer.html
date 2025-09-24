@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChainGate | Transfer</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1e40af;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --darker: #020617;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: white;
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-dark {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(55, 65, 81, 0.3);
+        }
+
+        .gradient-primary {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        }
+
+        .gradient-secondary {
+            background: linear-gradient(135deg, #7c3aed 0%, var(--secondary) 100%);
+        }
+
+        .gradient-success {
+            background: linear-gradient(135deg, #059669 0%, var(--success) 100%);
+        }
+
+        .gradient-warning {
+            background: linear-gradient(135deg, #d97706 0%, var(--warning) 100%);
+        }
+
+        .gradient-danger {
+            background: linear-gradient(135deg, #dc2626 0%, var(--danger) 100%);
+        }
+
+        .nav-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-btn:hover::before {
+            left: 100%;
+        }
+
+        .tab-active {
+            background: rgba(59, 130, 246, 0.2);
+            border-left: 3px solid var(--primary);
+        }
+
+        .status-indicator {
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .status-indicator::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            background-color: var(--success);
+        }
+
+        .status-indicator.warning::before {
+            background-color: var(--warning);
+        }
+
+        .status-indicator.danger::before {
+            background-color: var(--danger);
+        }
+
+        .wallet-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .wallet-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .wallet-card.selected {
+            border: 2px solid var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .transfer-type {
+            transition: all 0.3s ease;
+        }
+
+        .transfer-type:hover {
+            transform: translateY(-2px);
+        }
+
+        .transfer-type.selected {
+            background: rgba(59, 130, 246, 0.2);
+            border: 2px solid var(--primary);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="relative mb-6">
+                <div class="w-16 h-16 gradient-primary rounded-full flex items-center justify-center mx-auto">
+                    <i class="fas fa-link text-white text-2xl"></i>
+                </div>
+                <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-white animate-spin"></div>
+            </div>
+            <h2 class="text-2xl font-bold mb-2">Loading Transfer</h2>
+            <p class="text-slate-400">Preparing transfer interface...</p>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app" class="hidden min-h-screen flex flex-col lg:flex-row">
+        <!-- Sidebar Navigation -->
+        <div class="glass-dark w-full lg:w-64 min-h-screen p-4 flex flex-col">
+            <div class="flex items-center space-x-3 mb-8 pt-4">
+                <div class="gradient-primary p-2 rounded-lg">
+                    <i class="fas fa-link text-white text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold">ChainGate</h1>
+            </div>
+
+            <!-- Navigation Menu -->
+            <nav class="flex-1">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="index.html" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-tachometer-alt w-5 text-center"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="transactions.html" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-exchange-alt w-5 text-center"></i>
+                            <span>Transactions</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="wallets.html" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-wallet w-5 text-center"></i>
+                            <span>Wallets</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="compliance.html" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-shield-alt w-5 text-center"></i>
+                            <span>Compliance</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="analytics.html" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-chart-bar w-5 text-center"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="settings.html" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-cog w-5 text-center"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- User Info -->
+            <div class="pt-4 border-t border-slate-700">
+                <div class="flex items-center space-x-3 p-3 rounded-lg bg-slate-800/30">
+                    <div class="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium truncate" id="sidebarUserName">Alice Johnson</p>
+                        <p class="text-xs text-slate-400 truncate" id="sidebarUserRole">Verified Player</p>
+                    </div>
+                    <div class="status-indicator"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col">
+            <!-- Top Navigation Bar -->
+            <header class="glass-dark p-4 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button id="sidebarToggle" class="p-2 rounded-lg hover:bg-slate-800/50 lg:hidden">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h2 class="text-xl font-semibold">Transfer Funds</h2>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div class="hidden md:flex space-x-2">
+                        <button class="gradient-success px-4 py-2 rounded-lg text-sm hover:opacity-90 transition-opacity">
+                            <i class="fas fa-history mr-1"></i> History
+                        </button>
+                        <button class="glass px-4 py-2 rounded-lg text-sm hover:bg-white/20 transition-colors">
+                            <i class="fas fa-question-circle mr-1"></i> Help
+                        </button>
+                    </div>
+
+                    <button class="relative p-2 rounded-lg hover:bg-slate-800/50">
+                        <i class="fas fa-bell"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+
+                    <div class="flex items-center space-x-3">
+                        <div class="text-right hidden md:block">
+                            <p class="font-medium" id="topbarUserName">Alice Johnson</p>
+                            <p class="text-xs text-slate-400" id="topbarUserRole">Verified Player</p>
+                        </div>
+                        <div class="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-6 overflow-auto">
+                <!-- Transfer Type Selection -->
+                <div class="glass p-6 rounded-xl mb-8">
+                    <h3 class="text-xl font-semibold mb-6">Choose Transfer Type</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="transfer-type glass-dark p-6 rounded-lg" data-type="internal">
+                            <div class="flex items-center space-x-4 mb-4">
+                                <div class="w-12 h-12 gradient-primary rounded-full flex items-center justify-center">
+                                    <i class="fas fa-exchange-alt text-white"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">Internal Transfer</h4>
+                                    <p class="text-sm text-slate-400">Transfer between your wallets</p>
+                                </div>
+                            </div>
+                            <div class="text-sm text-slate-300">
+                                <p>• Instant transfer</p>
+                                <p>• No network fees</p>
+                                <p>• Same cryptocurrency</p>
+                            </div>
+                        </div>
+
+                        <div class="transfer-type glass-dark p-6 rounded-lg" data-type="external">
+                            <div class="flex items-center space-x-4 mb-4">
+                                <div class="w-12 h-12 gradient-secondary rounded-full flex items-center justify-center">
+                                    <i class="fas fa-paper-plane text-white"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">External Transfer</h4>
+                                    <p class="text-sm text-slate-400">Send to external wallet</p>
+                                </div>
+                            </div>
+                            <div class="text-sm text-slate-300">
+                                <p>• Network fees apply</p>
+                                <p>• 10-60 min confirmation</p>
+                                <p>• Any supported crypto</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Internal Transfer Form -->
+                <div class="transfer-form" id="internalTransfer">
+                    <div class="glass p-6 rounded-xl mb-6">
+                        <h3 class="text-xl font-semibold mb-6">Internal Wallet Transfer</h3>
+
+                        <div class="max-w-md mx-auto">
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium mb-2">From Wallet</label>
+                                <select id="fromWallet" class="w-full glass-dark px-4 py-2 rounded-lg text-white">
+                                    <option value="btc-main">Main Bitcoin Wallet (0.1258 BTC)</option>
+                                    <option value="eth-wallet">Ethereum Wallet (2.45 ETH)</option>
+                                    <option value="btc-watch">Watch Wallet (0.0500 BTC)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium mb-2">To Wallet</label>
+                                <select id="toWallet" class="w-full glass-dark px-4 py-2 rounded-lg text-white">
+                                    <option value="eth-wallet">Ethereum Wallet (2.45 ETH)</option>
+                                    <option value="btc-watch">Watch Wallet (0.0500 BTC)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium mb-2">Amount</label>
+                                <div class="relative">
+                                    <input type="number" id="internalAmount" placeholder="0.00" class="w-full glass-dark px-4 py-2 rounded-lg text-white pr-16">
+                                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400">
+                                        <span id="internalCurrency">BTC</span>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-slate-400 mt-2">
+                                    Available: <span id="availableBalance">0.1258 BTC</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-6 p-4 glass-dark rounded-lg">
+                                <h4 class="font-medium mb-2">Transfer Summary</h4>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Transfer Amount:</span>
+                                        <span id="internalSummaryAmount">0.0000 BTC</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Transfer Fee:</span>
+                                        <span class="text-green-400">Free</span>
+                                    </div>
+                                    <div class="flex justify-between font-semibold">
+                                        <span>You'll Receive:</span>
+                                        <span id="internalTotal">0.0000 BTC</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex space-x-4">
+                                <button id="cancelInternal" class="flex-1 glass px-4 py-2 rounded-lg hover:bg-white/20 transition-colors">
+                                    Cancel
+                                </button>
+                                <button id="confirmInternal" class="flex-1 gradient-primary px-4 py-2 rounded-lg hover:opacity-90 transition-opacity">
+                                    Transfer Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- External Transfer Form -->
+                <div class="transfer-form hidden" id="externalTransfer">
+                    <div class="glass p-6 rounded-xl mb-6">
+                        <h3 class="text-xl font-semibold mb-6">External Wallet Transfer</h3>
+
+                        <div class="max-w-md mx-auto">
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium mb-2">From Wallet</label>
+                                <select id="externalFromWallet" class="w-full glass-dark px-4 py-2 rounded-lg text-white">
+                                    <option value="btc-main">Main Bitcoin Wallet (0.1258 BTC)</option>
+                                    <option value="eth-wallet">Ethereum Wallet (2.45 ETH)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium mb-2">Recipient Address</label>
+                                <input type="text" id="recipientAddress" placeholder="Enter recipient wallet address" class="w-full glass-dark px-4 py-2 rounded-lg text-white font-mono">
+                                <div class="text-sm text-slate-400 mt-1">
+                                    Supports BTC, ETH, and other major cryptocurrencies
+                                </div>
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium mb-2">Amount</label>
+                                <div class="relative">
+                                    <input type="number" id="externalAmount" placeholder="0.00" class="w-full glass-dark px-4 py-2 rounded-lg text-white pr-16">
+                                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400">
+                                        <span id="externalCurrency">BTC</span>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-slate-400 mt-2">
+                                    Available: <span id="externalAvailableBalance">0.1258 BTC</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium mb-2">Transfer Speed</label>
+                                <select id="transferSpeed" class="w-full glass-dark px-4 py-2 rounded-lg text-white">
+                                    <option value="fast">Fast (10-30 min) - Higher fee</option>
+                                    <option value="standard">Standard (30-60 min) - Normal fee</option>
+                                    <option value="slow">Slow (1-2 hours) - Lower fee</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-6 p-4 glass-dark rounded-lg">
+                                <h4 class="font-medium mb-2">Transfer Summary</h4>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Transfer Amount:</span>
+                                        <span id="externalSummaryAmount">0.0000 BTC</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Network Fee:</span>
+                                        <span id="externalFee">0.00005 BTC</span>
+                                    </div>
+                                    <div class="flex justify-between font-semibold">
+                                        <span>Total Cost:</span>
+                                        <span id="externalTotal">0.00005 BTC</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-400">
+                                        <span>Estimated Time:</span>
+                                        <span id="estimatedTime">10-30 minutes</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex space-x-4">
+                                <button id="cancelExternal" class="flex-1 glass px-4 py-2 rounded-lg hover:bg-white/20 transition-colors">
+                                    Cancel
+                                </button>
+                                <button id="confirmExternal" class="flex-1 gradient-primary px-4 py-2 rounded-lg hover:opacity-90 transition-opacity">
+                                    Send Transfer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transfer History -->
+                <div class="glass p-6 rounded-xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-semibold">Recent Transfers</h3>
+                        <button class="gradient-primary px-4 py-2 rounded-lg text-sm hover:opacity-90 transition-opacity">
+                            View All
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-700">
+                                    <th class="text-left py-3">Type</th>
+                                    <th class="text-left py-3">From/To</th>
+                                    <th class="text-left py-3">Amount</th>
+                                    <th class="text-left py-3">Fee</th>
+                                    <th class="text-left py-3">Status</th>
+                                    <th class="text-left py-3">Date</th>
+                                    <th class="text-left py-3">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                                    <td class="py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-300">Internal</span>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="text-xs">
+                                            <div class="text-slate-300">From: Main BTC</div>
+                                            <div class="text-slate-400">To: ETH Wallet</div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 font-medium">0.025000 BTC</td>
+                                    <td class="py-3 text-green-400">Free</td>
+                                    <td class="py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-300">Completed</span>
+                                    </td>
+                                    <td class="py-3 text-slate-300">2023-10-15 14:30</td>
+                                    <td class="py-3">
+                                        <button class="text-blue-400 hover:text-blue-300">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                                    <td class="py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-purple-500/20 text-purple-300">External</span>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="text-xs">
+                                            <div class="text-slate-300">To: bc1qw508d6...</div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 font-medium">0.010000 BTC</td>
+                                    <td class="py-3 text-slate-400">0.00005 BTC</td>
+                                    <td class="py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300">Pending</span>
+                                    </td>
+                                    <td class="py-3 text-slate-300">2023-10-15 12:15</td>
+                                    <td class="py-3">
+                                        <button class="text-blue-400 hover:text-blue-300">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/30 transition-colors">
+                                    <td class="py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-300">Internal</span>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="text-xs">
+                                            <div class="text-slate-300">From: ETH Wallet</div>
+                                            <div class="text-slate-400">To: Main BTC</div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 font-medium">0.050000 ETH</td>
+                                    <td class="py-3 text-green-400">Free</td>
+                                    <td class="py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-300">Completed</span>
+                                    </td>
+                                    <td class="py-3 text-slate-300">2023-10-14 09:45</td>
+                                    <td class="py-3">
+                                        <button class="text-blue-400 hover:text-blue-300">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        let transferType = 'internal';
+        let fromWallet = 'btc-main';
+
+        // Simulate loading
+        setTimeout(() => {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+        }, 1500);
+
+        // Sidebar toggle for mobile
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.querySelector('.glass-dark.w-64').classList.toggle('hidden');
+        });
+
+        // Transfer type selection
+        document.querySelectorAll('.transfer-type').forEach(type => {
+            type.addEventListener('click', function() {
+                document.querySelectorAll('.transfer-type').forEach(t => t.classList.remove('selected'));
+                this.classList.add('selected');
+                transferType = this.getAttribute('data-type');
+
+                document.querySelectorAll('.transfer-form').forEach(form => form.classList.add('hidden'));
+                document.getElementById(`${transferType}Transfer`).classList.remove('hidden');
+            });
+        });
+
+        // Wallet selection
+        document.getElementById('fromWallet').addEventListener('change', function() {
+            fromWallet = this.value;
+            updateWalletBalance();
+        });
+
+        document.getElementById('externalFromWallet').addEventListener('change', function() {
+            fromWallet = this.value;
+            updateWalletBalance();
+        });
+
+        function updateWalletBalance() {
+            const balances = {
+                'btc-main': { amount: 0.1258, currency: 'BTC' },
+                'eth-wallet': { amount: 2.45, currency: 'ETH' },
+                'btc-watch': { amount: 0.0500, currency: 'BTC' }
+            };
+
+            const balance = balances[fromWallet];
+            document.getElementById('availableBalance').textContent = `${balance.amount} ${balance.currency}`;
+            document.getElementById('externalAvailableBalance').textContent = `${balance.amount} ${balance.currency}`;
+            document.getElementById('internalCurrency').textContent = balance.currency;
+            document.getElementById('externalCurrency').textContent = balance.currency;
+        }
+
+        // Amount input handlers
+        document.getElementById('internalAmount').addEventListener('input', function() {
+            updateInternalSummary();
+        });
+
+        document.getElementById('externalAmount').addEventListener('input', function() {
+            updateExternalSummary();
+        });
+
+        function updateInternalSummary() {
+            const amount = parseFloat(document.getElementById('internalAmount').value) || 0;
+            const currency = document.getElementById('internalCurrency').textContent;
+
+            document.getElementById('internalSummaryAmount').textContent = `${amount.toFixed(6)} ${currency}`;
+            document.getElementById('internalTotal').textContent = `${amount.toFixed(6)} ${currency}`;
+        }
+
+        function updateExternalSummary() {
+            const amount = parseFloat(document.getElementById('externalAmount').value) || 0;
+            const currency = document.getElementById('externalCurrency').textContent;
+            const speed = document.getElementById('transferSpeed').value;
+
+            let fee = 0.00005; // Default BTC fee
+            let time = '10-30 minutes';
+
+            if (speed === 'standard') {
+                fee = 0.00003;
+                time = '30-60 minutes';
+            } else if (speed === 'slow') {
+                fee = 0.00001;
+                time = '1-2 hours';
+            }
+
+            const total = amount + fee;
+
+            document.getElementById('externalSummaryAmount').textContent = `${amount.toFixed(6)} ${currency}`;
+            document.getElementById('externalFee').textContent = `${fee.toFixed(6)} ${currency}`;
+            document.getElementById('externalTotal').textContent = `${total.toFixed(6)} ${currency}`;
+            document.getElementById('estimatedTime').textContent = time;
+        }
+
+        // Transfer speed change
+        document.getElementById('transferSpeed').addEventListener('change', function() {
+            updateExternalSummary();
+        });
+
+        // Cancel buttons
+        document.getElementById('cancelInternal').addEventListener('click', function() {
+            document.getElementById('internalAmount').value = '';
+            updateInternalSummary();
+        });
+
+        document.getElementById('cancelExternal').addEventListener('click', function() {
+            document.getElementById('externalAmount').value = '';
+            document.getElementById('recipientAddress').value = '';
+            updateExternalSummary();
+        });
+
+        // Confirm buttons
+        document.getElementById('confirmInternal').addEventListener('click', function() {
+            showNotification('Internal transfer initiated successfully!', 'success');
+        });
+
+        document.getElementById('confirmExternal').addEventListener('click', function() {
+            const address = document.getElementById('recipientAddress').value;
+            if (!address) {
+                showNotification('Please enter recipient address', 'error');
+                return;
+            }
+            showNotification('External transfer initiated. Waiting for confirmations...', 'success');
+        });
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 glass p-4 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform ${
+                type === 'success' ? 'border-l-4 border-green-500' :
+                type === 'error' ? 'border-l-4 border-red-500' :
+                type === 'warning' ? 'border-l-4 border-yellow-500' : 'border-l-4 border-blue-500'
+            }`;
+
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${
+                        type === 'success' ? 'fa-check-circle text-green-400' :
+                        type === 'error' ? 'fa-exclamation-circle text-red-400' :
+                        type === 'warning' ? 'fa-exclamation-triangle text-yellow-400' : 'fa-info-circle text-blue-400'
+                    } mr-3"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 10);
+
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Button event listeners
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (this.textContent.includes('History')) {
+                    showNotification('Loading transfer history...', 'info');
+                } else if (this.textContent.includes('Help')) {
+                    showNotification('Opening help center...', 'info');
+                } else if (this.textContent.includes('View All')) {
+                    showNotification('Loading all transfers...', 'info');
+                } else if (this.textContent.includes('Transfer Now')) {
+                    const amount = document.getElementById('internalAmount').value;
+                    if (!amount) {
+                        showNotification('Please enter transfer amount', 'error');
+                        return;
+                    }
+                    showNotification('Internal transfer initiated successfully!', 'success');
+                } else if (this.textContent.includes('Send Transfer')) {
+                    const amount = document.getElementById('externalAmount').value;
+                    const address = document.getElementById('recipientAddress').value;
+                    if (!amount || !address) {
+                        showNotification('Please fill all required fields', 'error');
+                        return;
+                    }
+                    showNotification('External transfer initiated. Waiting for confirmations...', 'success');
+                }
+            });
+        });
+
+        // Initialize
+        updateWalletBalance();
+    </script>
+</body>
+</html>

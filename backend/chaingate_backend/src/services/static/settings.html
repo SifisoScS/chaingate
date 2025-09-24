@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChainGate | Settings</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1e40af;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --darker: #020617;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: white;
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-dark {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(55, 65, 81, 0.3);
+        }
+
+        .gradient-primary {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        }
+
+        .gradient-secondary {
+            background: linear-gradient(135deg, #7c3aed 0%, var(--secondary) 100%);
+        }
+
+        .gradient-success {
+            background: linear-gradient(135deg, #059669 0%, var(--success) 100%);
+        }
+
+        .gradient-warning {
+            background: linear-gradient(135deg, #d97706 0%, var(--warning) 100%);
+        }
+
+        .gradient-danger {
+            background: linear-gradient(135deg, #dc2626 0%, var(--danger) 100%);
+        }
+
+        .nav-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-btn:hover::before {
+            left: 100%;
+        }
+
+        .tab-active {
+            background: rgba(59, 130, 246, 0.2);
+            border-left: 3px solid var(--primary);
+        }
+
+        .status-indicator {
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .status-indicator::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            background-color: var(--success);
+        }
+
+        .status-indicator.warning::before {
+            background-color: var(--warning);
+        }
+
+        .status-indicator.danger::before {
+            background-color: var(--danger);
+        }
+
+        .settings-section {
+            transition: all 0.3s ease;
+        }
+
+        .settings-section:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="relative mb-6">
+                <div class="w-16 h-16 gradient-primary rounded-full flex items-center justify-center mx-auto">
+                    <i class="fas fa-link text-white text-2xl"></i>
+                </div>
+                <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-white animate-spin"></div>
+            </div>
+            <h2 class="text-2xl font-bold mb-2">Loading Settings</h2>
+            <p class="text-slate-400">Configuring your preferences...</p>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app" class="hidden min-h-screen flex flex-col lg:flex-row">
+        <!-- Sidebar Navigation -->
+        <div class="glass-dark w-full lg:w-64 min-h-screen p-4 flex flex-col">
+            <div class="flex items-center space-x-3 mb-8 pt-4">
+                <div class="gradient-primary p-2 rounded-lg">
+                    <i class="fas fa-link text-white text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold">ChainGate</h1>
+            </div>
+
+            <!-- Navigation Menu -->
+            <nav class="flex-1">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="index.html" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-tachometer-alt w-5 text-center"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="transactions.html" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-exchange-alt w-5 text-center"></i>
+                            <span>Transactions</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="wallets.html" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-wallet w-5 text-center"></i>
+                            <span>Wallets</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="compliance.html" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-shield-alt w-5 text-center"></i>
+                            <span>Compliance</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="analytics.html" class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-slate-300 hover:bg-slate-800/50">
+                            <i class="fas fa-chart-bar w-5 text-center"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="settings.html" class="nav-btn flex items-center space-x-3 p-3 rounded-lg gradient-primary text-white tab-active">
+                            <i class="fas fa-cog w-5 text-center"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- User Info -->
+            <div class="pt-4 border-t border-slate-700">
+                <div class="flex items-center space-x-3 p-3 rounded-lg bg-slate-800/30">
+                    <div class="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium truncate" id="sidebarUserName">Alice Johnson</p>
+                        <p class="text-xs text-slate-400 truncate" id="sidebarUserRole">Verified Player</p>
+                    </div>
+                    <div class="status-indicator"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col">
+            <!-- Top Navigation Bar -->
+            <header class="glass-dark p-4 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button id="sidebarToggle" class="p-2 rounded-lg hover:bg-slate-800/50 lg:hidden">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h2 class="text-xl font-semibold">Account Settings</h2>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div class="hidden md:flex space-x-2">
+                        <button class="gradient-success px-4 py-2 rounded-lg text-sm hover:opacity-90 transition-opacity">
+                            <i class="fas fa-save mr-1"></i> Save Changes
+                        </button>
+                        <button class="glass px-4 py-2 rounded-lg text-sm hover:bg-white/20 transition-colors">
+                            <i class="fas fa-undo mr-1"></i> Reset
+                        </button>
+                    </div>
+
+                    <button class="relative p-2 rounded-lg hover:bg-slate-800/50">
+                        <i class="fas fa-bell"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+
+                    <div class="flex items-center space-x-3">
+                        <div class="text-right hidden md:block">
+                            <p class="font-medium" id="topbarUserName">Alice Johnson</p>
+                            <p class="text-xs text-slate-400" id="topbarUserRole">Verified Player</p>
+                        </div>
+                        <div class="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-6 overflow-auto">
+                <!-- Settings Tabs -->
+                <div class="glass p-4 rounded-xl mb-6">
+                    <div class="flex flex-wrap gap-2">
+                        <button class="settings-tab active px-4 py-2 rounded-lg text-sm" data-tab="profile">
+                            <i class="fas fa-user mr-2"></i> Profile
+                        </button>
+                        <button class="settings-tab px-4 py-2 rounded-lg text-sm" data-tab="security">
+                            <i class="fas fa-shield-alt mr-2"></i> Security
+                        </button>
+                        <button class="settings-tab px-4 py-2 rounded-lg text-sm" data-tab="notifications">
+                            <i class="fas fa-bell mr-2"></i> Notifications
+                        </button>
+                        <button class="settings-tab px-4 py-2 rounded-lg text-sm" data-tab="privacy">
+                            <i class="fas fa-lock mr-2"></i> Privacy
+                        </button>
+                        <button class="settings-tab px-4 py-2 rounded-lg text-sm" data-tab="preferences">
+                            <i class="fas fa-sliders-h mr-2"></i> Preferences
+                        </button>
+                        <button class="settings-tab px-4 py-2 rounded-lg text-sm" data-tab="api">
+                            <i class="fas fa-code mr-2"></i> API
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Profile Settings -->
+                <div class="settings-content" id="profile">
+                    <div class="glass p-6 rounded-xl mb-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-semibold">Profile Information</h3>
+                            <button class="gradient-primary px-4 py-2 rounded-lg text-sm hover:opacity-90 transition-opacity">
+                                Edit Profile
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Full Name</label>
+                                    <input type="text" value="Alice Johnson" class="w-full glass-dark px-4 py-2 rounded-lg text-white">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Email Address</label>
+                                    <input type="email" value="alice.johnson@example.com" class="w-full glass-dark px-4 py-2 rounded-lg text-white">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Phone Number</label>
+                                    <input type="tel" value="+1 (555) 123-4567" class="w-full glass-dark px-4 py-2 rounded-lg text-white">
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Country</label>
+                                    <select class="w-full glass-dark px-4 py-2 rounded-lg text-white">
+                                        <option>United States</option>
+                                        <option>Canada</option>
+                                        <option>United Kingdom</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Timezone</label>
+                                    <select class="w-full glass-dark px-4 py-2 rounded-lg text-white">
+                                        <option>UTC-8 (PST)</option>
+                                        <option>UTC-5 (EST)</option>
+                                        <option>UTC+0 (GMT)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Language</label>
+                                    <select class="w-full glass-dark px-4 py-2 rounded-lg text-white">
+                                        <option>English</option>
+                                        <option>Spanish</option>
+                                        <option>French</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Settings -->
+                <div class="settings-content hidden" id="security">
+                    <div class="glass p-6 rounded-xl mb-6">
+                        <h3 class="text-xl font-semibold mb-6">Security Settings</h3>
+
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between p-4 glass-dark rounded-lg">
+                                <div>
+                                    <h4 class="font-medium">Two-Factor Authentication</h4>
+                                    <p class="text-sm text-slate-400">Add an extra layer of security to your account</p>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-green-400 text-sm mr-3">Enabled</span>
+                                    <button class="gradient-primary px-3 py-1 rounded text-sm hover:opacity-90">Configure</button>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass-dark rounded-lg">
+                                <div>
+                                    <h4 class="font-medium">Password</h4>
+                                    <p class="text-sm text-slate-400">Last changed 30 days ago</p>
+                                </div>
+                                <button class="gradient-warning px-3 py-1 rounded text-sm hover:opacity-90">Change</button>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass-dark rounded-lg">
+                                <div>
+                                    <h4 class="font-medium">Login Sessions</h4>
+                                    <p class="text-sm text-slate-400">Manage your active sessions</p>
+                                </div>
+                                <button class="glass px-3 py-1 rounded text-sm hover:bg-white/20">View</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Settings -->
+                <div class="settings-content hidden" id="notifications">
+                    <div class="glass p-6 rounded-xl mb-6">
+                        <h3 class="text-xl font-semibold mb-6">Notification Preferences</h3>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 glass-dark rounded-lg">
+                                <div>
+                                    <h4 class="font-medium">Transaction Alerts</h4>
+                                    <p class="text-sm text-slate-400">Get notified about all transactions</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass-dark rounded-lg">
+                                <div>
+                                    <h4 class="font-medium">Security Alerts</h4>
+                                    <p class="text-sm text-slate-400">Important security notifications</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass-dark rounded-lg">
+                                <div>
+                                    <h4 class="font-medium">Marketing Updates</h4>
+                                    <p class="text-sm text-slate-400">Product updates and promotions</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Privacy Settings -->
+                <div class="settings-content hidden" id="privacy">
+                    <div class="glass p-6 rounded-xl mb-6">
+                        <h3 class="text-xl font-semibold mb-6">Privacy Settings</h3>
+
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between p-4 glass-dark rounded-lg">
+                                <div>
+                                    <h4 class="font-medium">Data Sharing</h4>
+                                    <p class="text-sm text-slate-400">Share anonymized data for analytics</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass-dark rounded-lg">
+                                <div>
+                                    <h4 class="font-medium">Transaction History</h4>
+                                    <p class="text-sm text-slate-400">Make transaction history public</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass-dark rounded-lg">
+                                <div>
+                                    <h4 class="font-medium">Profile Visibility</h4>
+                                    <p class="text-sm text-slate-400">Control who can see your profile</p>
+                                </div>
+                                <select class="glass-dark px-3 py-1 rounded text-sm">
+                                    <option>Private</option>
+                                    <option>Friends</option>
+                                    <option>Public</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferences Settings -->
+                <div class="settings-content hidden" id="preferences">
+                    <div class="glass p-6 rounded-xl mb-6">
+                        <h3 class="text-xl font-semibold mb-6">Display Preferences</h3>
+
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between p-4 glass-dark rounded-lg">
+                                <div>
+                                    <h4 class="font-medium">Dark Mode</h4>
+                                    <p class="text-sm text-slate-400">Use dark theme</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass-dark rounded-lg">
+                                <div>
+                                    <h4 class="font-medium">Currency Display</h4>
+                                    <p class="text-sm text-slate-400">Primary currency for display</p>
+                                </div>
+                                <select class="glass-dark px-3 py-1 rounded text-sm">
+                                    <option>BTC</option>
+                                    <option>USD</option>
+                                    <option>EUR</option>
+                                </select>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 glass-dark rounded-lg">
+                                <div>
+                                    <h4 class="font-medium">Auto-refresh</h4>
+                                    <p class="text-sm text-slate-400">Automatically refresh data</p>
+                                </div>
+                                <select class="glass-dark px-3 py-1 rounded text-sm">
+                                    <option>30 seconds</option>
+                                    <option>1 minute</option>
+                                    <option>5 minutes</option>
+                                    <option>Disabled</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Settings -->
+                <div class="settings-content hidden" id="api">
+                    <div class="glass p-6 rounded-xl mb-6">
+                        <h3 class="text-xl font-semibold mb-6">API Configuration</h3>
+
+                        <div class="space-y-6">
+                            <div class="p-4 glass-dark rounded-lg">
+                                <h4 class="font-medium mb-2">API Key</h4>
+                                <div class="flex items-center space-x-2">
+                                    <input type="password" value="sk_test_1234567890abcdef" class="flex-1 glass-dark px-3 py-1 rounded text-sm" readonly>
+                                    <button class="gradient-primary px-3 py-1 rounded text-sm hover:opacity-90">Regenerate</button>
+                                </div>
+                            </div>
+
+                            <div class="p-4 glass-dark rounded-lg">
+                                <h4 class="font-medium mb-2">Webhook URL</h4>
+                                <div class="flex items-center space-x-2">
+                                    <input type="url" placeholder="https://your-webhook-url.com" class="flex-1 glass-dark px-3 py-1 rounded text-sm">
+                                    <button class="gradient-success px-3 py-1 rounded text-sm hover:opacity-90">Test</button>
+                                </div>
+                            </div>
+
+                            <div class="p-4 glass-dark rounded-lg">
+                                <h4 class="font-medium mb-2">Rate Limits</h4>
+                                <div class="text-sm text-slate-400">
+                                    <p>Requests per minute: 1000</p>
+                                    <p>Daily requests: 50,000</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Simulate loading
+        setTimeout(() => {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+        }, 1500);
+
+        // Sidebar toggle for mobile
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.querySelector('.glass-dark.w-64').classList.toggle('hidden');
+        });
+
+        // Settings tab switching
+        document.querySelectorAll('.settings-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active', 'gradient-primary', 'text-white'));
+                document.querySelectorAll('.settings-tab').forEach(t => t.classList.add('text-slate-300'));
+
+                // Add active class to clicked tab
+                this.classList.add('active', 'gradient-primary', 'text-white');
+                this.classList.remove('text-slate-300');
+
+                // Hide all content
+                document.querySelectorAll('.settings-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+
+                // Show selected content
+                const targetId = this.getAttribute('data-tab');
+                document.getElementById(targetId).classList.remove('hidden');
+            });
+        });
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 glass p-4 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform ${
+                type === 'success' ? 'border-l-4 border-green-500' :
+                type === 'error' ? 'border-l-4 border-red-500' :
+                type === 'warning' ? 'border-l-4 border-yellow-500' : 'border-l-4 border-blue-500'
+            }`;
+
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${
+                        type === 'success' ? 'fa-check-circle text-green-400' :
+                        type === 'error' ? 'fa-exclamation-circle text-red-400' :
+                        type === 'warning' ? 'fa-exclamation-triangle text-yellow-400' : 'fa-info-circle text-blue-400'
+                    } mr-3"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 10);
+
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Button event listeners
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (this.textContent.includes('Save Changes')) {
+                    showNotification('Settings saved successfully!', 'success');
+                } else if (this.textContent.includes('Reset')) {
+                    showNotification('Settings reset to defaults', 'warning');
+                } else if (this.textContent.includes('Edit Profile')) {
+                    showNotification('Opening profile editor...', 'info');
+                } else if (this.textContent.includes('Configure')) {
+                    showNotification('Opening 2FA configuration...', 'info');
+                } else if (this.textContent.includes('Change')) {
+                    showNotification('Opening password change...', 'info');
+                } else if (this.textContent.includes('View')) {
+                    showNotification('Loading session information...', 'info');
+                } else if (this.textContent.includes('Regenerate')) {
+                    showNotification('Generating new API key...', 'info');
+                } else if (this.textContent.includes('Test')) {
+                    showNotification('Testing webhook...', 'info');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
