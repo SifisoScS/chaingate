@@ -133,8 +133,7 @@ def init_database():
         return True
 
 if __name__ == '__main__':
-    success = init_database()
-    if success:
+    if success := init_database():
         print("\nDatabase initialization completed successfully!")
     else:
         print("\nDatabase initialization failed!")

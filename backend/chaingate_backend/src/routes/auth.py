@@ -1,107 +1,129 @@
-from flask import Blueprint, jsonify, request, session
-from src.models.user import User, Wallet, db
-from src.services.bitcoin_simulator import BitcoinSimulator
-import uuid
+from datetime import datetime
+from flask import Blueprint, Flask, request, jsonify
+from flask_cors import CORS
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from werkzeug.security import check_password_hash
+
+from src import config
+from ..database import db
+from ..models.user import User, AuditLog
+import logging
 
 auth_bp = Blueprint('auth', __name__)
-bitcoin_simulator = BitcoinSimulator()
 
-@auth_bp.route('/auth/register', methods=['POST'])
-def register():
-    try:
-        data = request.json
-        
-        # Validate required fields
-        if not data or not data.get('username') or not data.get('email') or not data.get('password'):
-            return jsonify({'status': 'error', 'message': 'Username, email, and password are required'}), 400
-        
-        # Check if user already exists
-        if User.query.filter_by(email=data['email']).first():
-            return jsonify({'status': 'error', 'message': 'Email already registered'}), 400
-        
-        if User.query.filter_by(username=data['username']).first():
-            return jsonify({'status': 'error', 'message': 'Username already taken'}), 400
-        
-        # Create new user
-        user = User(
-            username=data['username'],
-            email=data['email'],
-            role=data.get('role', 'player')
-        )
-        user.set_password(data['password'])
-        
-        db.session.add(user)
-        db.session.commit()
-        
-        # Create wallet for the user
-        btc_address = bitcoin_simulator.generate_address(user.id)
-        wallet = Wallet(
-            user_id=user.id,
-            btc_address=btc_address,
-            balance=0.0
-        )
-        db.session.add(wallet)
-        db.session.commit()
-        
-        return jsonify({
-            'status': 'success',
-            'message': 'User registered successfully',
-            'user_id': user.id
-        }), 201
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-@auth_bp.route('/auth/login', methods=['POST'])
+@auth_bp.route('/login', methods=['POST'])
 def login():
+    """User login endpoint"""
     try:
-        data = request.json
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
         
-        if not data or not data.get('email') or not data.get('password'):
-            return jsonify({'status': 'error', 'message': 'Email and password are required'}), 400
+        if not email or not password:
+            return jsonify({'error': 'Email and password required'}), 400
         
-        user = User.query.filter_by(email=data['email']).first()
+        user = User.query.filter_by(email=email).first()
         
-        if not user or not user.check_password(data['password']):
-            return jsonify({'status': 'error', 'message': 'Invalid email or password'}), 401
-        
-        if not user.is_active:
-            return jsonify({'status': 'error', 'message': 'Account is suspended'}), 403
-        
-        # Create session
-        session['user_id'] = user.id
-        session['role'] = user.role
-        
-        return jsonify({
-            'status': 'success',
-            'message': 'Login successful',
-            'user_id': user.id,
-            'role': user.role
-        }), 200
-        
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-@auth_bp.route('/auth/logout', methods=['POST'])
-def logout():
-    session.clear()
-    return jsonify({
-        'status': 'success',
-        'message': 'Logged out successfully'
-    }), 200
-
-@auth_bp.route('/auth/status', methods=['GET'])
-def status():
-    if 'user_id' in session:
-        user = User.query.get(session['user_id'])
-        if user and user.is_active:
+        if user and user.check_password(password) and user.is_active:
+            login_user(user)
+            
+            # Log the login
+            audit_log = AuditLog(
+                user_id=user.id,
+                action='user_login',
+                resource='/api/auth/login',
+                details=f'User {user.email} logged in successfully'
+            )
+            db.session.add(audit_log)
+            db.session.commit()
+            
             return jsonify({
-                'is_authenticated': True,
-                'user_id': user.id,
-                'role': user.role,
-                'username': user.username
-            }), 200
-    
-    return jsonify({'is_authenticated': False}), 200
+                'message': 'Login successful',
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'role': user.role,
+                    'kyc_status': user.kyc_status,
+                    'risk_level': user.risk_level
+                }
+            })
+        else:
+            return jsonify({'error': 'Invalid credentials or inactive account'}), 401
+            
+    except Exception as e:
+        logging.error(f"Login error: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
+def create_app(config_name='default'):
+    """Create and configure the Flask application"""
+    app = Flask(__name__)
+    app.config.from_object(config[config_name])
+    
+    # Initialize extensions
+    db.init_app(app)
+    CORS(app)
+    
+    # Configure login manager
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+    
+    # Register blueprints
+    from routes.auth import auth_bp
+    from routes.player import player_bp
+    from routes.admin import admin_bp
+    
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(player_bp, url_prefix='/api/player')
+    app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    
+    # Logging middleware
+    @app.before_request
+    def log_request():
+        if request.endpoint and 'static' not in request.endpoint:
+            audit_log = AuditLog(
+                user_id=current_user.id if current_user.is_authenticated else None,
+                action=f'{request.method} {request.endpoint}',
+                resource=request.path,
+                ip_address=request.remote_addr,
+                user_agent=request.user_agent.string
+            )
+            db.session.add(audit_log)
+            db.session.commit()
+    
+    # Error handlers
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({'error': 'Resource not found'}), 404
+    
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
+    
+    # Health check endpoint
+    @app.route('/health')
+    def health_check():
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.utcnow().isoformat(),
+            'version': '1.0.0'
+        })
+    
+    return app
+
+if __name__ == '__main__':
+    app = create_app()
+    
+    with app.app_context():
+        # Create database tables
+        db.create_all()
+        print("Database tables created successfully!")
+    
+    # Run the application
+    app.run(host='0.0.0.0', port=5000, debug=app.config['DEBUG'])

@@ -1,5 +1,6 @@
 {
     "python.analysis.extraPaths": [
-        "./backend/chaingate_backend"
+        "./backend/chaingate_backend",
+        "./backend/chaingate_backend/src"
     ]
 }
